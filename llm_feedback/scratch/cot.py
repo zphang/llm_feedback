@@ -53,11 +53,11 @@ The following is a proposed solution to a math question. There may be an error w
 
 The output should look like:
 
-    Line X: (Description of error)
+    Step X: (Description of error)
     
     or 
     
-    Line X: OK.
+    Step X: OK.
 
 for each line.
 
@@ -104,9 +104,9 @@ def create_mbpp_chain(initial_llm, feedback_llm, refinement_llm):
 You will be given a Python programming task and one unit test. Write a function that satisfies the specification in task description and passes the unit test. Prepend every line of code with a comment with the line number and a description of what the code does. Important: Do not include the test case in your solution!
 For example:
 
-# Step 1: set x to 0
+# Line 1: set x to 0
 x = 0
-# Step 2: add 1 to x
+# Line 2: add 1 to x
 x += 1
 
 Instruction:
