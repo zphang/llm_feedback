@@ -37,3 +37,13 @@ python llm_feedback/pilot/run_pilot_evaluation.py \
     --output_dir /path/to/dir
 ```
 
+## Adding new tasks:
+
+1. Create a new Python file under `llm_feedback/pilot/tasks/`
+2. Implement a subclass of `llm_feedback.pilot.tasks.base.BaseTask`, specifically following methods:
+   - `get_dataset`: load the dataset and return some iterable of examples 
+   - `get_chain`: return a LangChain chain
+   - `process` (optional): apply the chain to the example. Override if special processing (e.g. renaming keys) is needed
+   - `evaluate`: Evaluate a list of model outputs. Evaluate both initial and refinement outputs if necessary.
+   - See `llm_feedback/pilot/tasks/example.py` and `llm_feedback/pilot/tasks/mathqa.py` for examples.
+3. Add the task to `llm_feedback/pilot/tasks/__init__.py`
