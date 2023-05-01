@@ -2,7 +2,6 @@ import argparse
 import tqdm.auto as tqdm
 import os
 import json
-import dotenv
 
 import llm_feedback.pilot.tasks as tasks
 import llm_feedback.utils.env as env
