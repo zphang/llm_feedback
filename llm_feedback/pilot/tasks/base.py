@@ -4,7 +4,6 @@ from typing import List, Dict, Optional
 
 @dataclasses.dataclass
 class BaseTask:
-
     def get_dataset(self, phase: str):
         """Get dataset for a phase
 
@@ -12,8 +11,13 @@ class BaseTask:
         """
         raise NotImplementedError()
 
-    def get_chain(self, generation_llm: str, feedback_llm: str, refinement_llm: str,
-                  chain_name: Optional[str] = None):
+    def get_chain(
+        self,
+        generation_llm: str,
+        feedback_llm: str,
+        refinement_llm: str,
+        chain_name: Optional[str] = None,
+    ):
         """Return LLM langchain
 
         Note: we only pass in the model names, not the actual models.
