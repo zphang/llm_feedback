@@ -9,13 +9,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_outputs_path", type=str)  # path to JSONL
     parser.add_argument("--task", type=str)
+    parser.add_argument("--task_args_str", type=str, default=None)
     parser.add_argument("--phase", type=str, default="train")
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--override_filename", type=str, default=None)
     # if override_filename is not provided, we replace "__outputs.jsonl" with "__metrics.json"
     args = parser.parse_args()
 
-    task = tasks.get_task(args.task)
+    task = tasks.get_task(task_name=args.task, task_args_str=args.task_args_str)
     os.makedirs(args.output_dir, exist_ok=True)
     if args.override_filename is None:
         filename = args.model_outputs_path.replace("__outputs.jsonl", "__metrics.json")

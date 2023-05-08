@@ -141,13 +141,4 @@ The function should pass the following tests:
         })
 
     def evaluate(self, phase: str, outputs: List[Dict]):
-        # This is a terrible evaluation metric, but it's just an example.
-        # In practice we need to parse the output and get the answer.
-        dataset = self.get_dataset(phase=phase)
-        scores = {"exact_match": []}
-        for row, example in zip(outputs, dataset):
-            exact_match = str(row["refinement"]) == str(example["target"])
-            scores["exact_match"].append(exact_match)
-        return {
-            "exact_match": sum(scores["exact_match"]) / len(scores["exact_match"]),
-        }
+        raise NotImplementedError()
