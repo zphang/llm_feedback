@@ -14,10 +14,6 @@ def main():
     parser.add_argument("--override_filename", type=str, default=None)
     # if override_filename is not provided, we replace "__outputs.jsonl" with "__metrics.json"
     args = parser.parse_args()
-    if args.feedback_llm is None:
-        args.feedback_llm = args.generation_llm
-    if args.refinement_llm is None:
-        args.refinement_llm = args.generation_llm
 
     task = tasks.get_task(args.task)
     os.makedirs(args.output_dir, exist_ok=True)

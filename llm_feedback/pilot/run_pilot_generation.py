@@ -30,6 +30,7 @@ def main():
         generation_llm=args.generation_llm,
         feedback_llm=args.feedback_llm,
         refinement_llm=args.refinement_llm,
+        chain_name = args.chain_name
     )
     dataset = task.get_dataset(phase=args.phase)
     os.makedirs(args.output_dir, exist_ok=True)
