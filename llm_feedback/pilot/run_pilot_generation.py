@@ -13,6 +13,7 @@ def main():
     parser.add_argument("--feedback_llm", type=str, default=None)
     parser.add_argument("--refinement_llm", type=str, default=None)
     parser.add_argument("--task", type=str)
+    parser.add_argument("--task_args_str", type=str, default=None)
     parser.add_argument("--chain_name", default=None)  # If there are different langchains
     parser.add_argument("--phase", type=str, default="train")
     parser.add_argument("--max_num_examples", type=int, default=50)  # takes first n examples
@@ -25,7 +26,7 @@ def main():
 
     env.load_dotenv()
 
-    task = tasks.get_task(args.task)
+    task = tasks.get_task(task_name=args.task, task_args_str=args.task_args_str)
     chain = task.get_chain(
         generation_llm=args.generation_llm,
         feedback_llm=args.feedback_llm,
