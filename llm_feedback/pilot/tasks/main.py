@@ -7,6 +7,8 @@ from . import example
 from . import mathqa
 from . import mbpp
 from . import slf5k
+from . import gsm8k
+from . import aqua_rat
 
 
 def get_task(task_name: str, task_args_str: Optional[str] = None) -> base.BaseTask:
@@ -25,5 +27,9 @@ def get_task(task_name: str, task_args_str: Optional[str] = None) -> base.BaseTa
         return mbpp.MBPPTask()
     elif task_name == "slf5k":
         return slf5k.SLF5KTask()
+    elif task_name == "gsm8k":
+        return gsm8k.GSM8KTask()
+    elif task_name == "aqua_rat":
+        return aqua_rat.AQUARATTask()
     else:
         raise ValueError("Unknown task {}".format(task_name))

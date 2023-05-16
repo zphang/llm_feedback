@@ -4,12 +4,13 @@ import pickle
 import dataclasses
 
 # Contriever codebase
-import src.index
-import src.contriever
-import src.utils
-import src.slurm
-import src.data
-import src.normalize_text
+# TODO: CHECK THIS
+# import src.index
+# import src.contriever
+# import src.utils
+# import src.slurm
+# import src.data
+# import src.normalize_text
 
 
 def embed_queries(args, queries, model, tokenizer):

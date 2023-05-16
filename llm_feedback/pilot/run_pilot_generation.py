@@ -3,6 +3,9 @@ import tqdm.auto as tqdm
 import os
 import json
 
+import sys
+sys.path.append(".")
+
 import llm_feedback.pilot.tasks as tasks
 import llm_feedback.utils.env as env
 
@@ -49,6 +52,7 @@ def main():
         max_num_examples = min(args.max_num_examples, len(dataset))
         for i, example in zip(tqdm.trange(max_num_examples), dataset):
             all_outputs = task.process(chain=chain, example=example)
+            print(all_outputs)
             f.write(json.dumps(all_outputs) + "\n")
             count += 1
 

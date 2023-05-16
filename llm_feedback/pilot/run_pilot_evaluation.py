@@ -1,6 +1,9 @@
 import argparse
 import os
 
+import sys
+sys.path.append(".")
+
 import llm_feedback.pilot.tasks as tasks
 from llm_feedback.utils.io import read_jsonl, write_json
 

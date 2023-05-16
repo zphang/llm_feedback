@@ -1,3 +1,4 @@
+import re
 from typing import List, Dict, Optional
 
 from langchain.chat_models import ChatOpenAI
@@ -83,6 +84,7 @@ I'm not sure about that. Here's why I think it's wrong: {feedback}
         return ilf_chain
 
     def evaluate(self, phase: str, outputs: List[Dict]):
+        metric_dict = {}
         # This is a terrible evaluation metric, but it's just an example.
         # In practice we need to parse the output and get the answer.
         dataset = self.get_dataset(phase=phase)
@@ -90,6 +92,18 @@ I'm not sure about that. Here's why I think it's wrong: {feedback}
         for row, example in zip(outputs, dataset):
             exact_match = str(row["refinement"]) == str(example["target"])
             scores["exact_match"].append(exact_match)
-        return {
-            "exact_match": sum(scores["exact_match"]) / len(scores["exact_match"]),
-        }
+        metric_dict["exact_match"] = sum(scores["exact_match"]) / len(scores["exact_match"])
+
+        # parse it with a regex
+        init_exact_match = sum([1 for x in outputs if x["initial_solution"] == x["target"]])
+        metric_dict["init_exact_match"] = init_exact_match / len(dataset)
+
+        refinement_exact_match = sum([1 for x in outputs if x["refinement"] == x["target"]])
+        metric_dict["refinement_exact_match"] = refinement_exact_match / len(dataset)
+
+        # (\d+)
+        init_regex = re.compile(r"(\d+)")
+        init_regex_match = sum([1 for x in outputs if init_regex.search(x["initial_solution"]) is not None])
+        metric_dict["init_regex_match"] = init_regex_match / len(dataset) 
+
+        return metric_dict
