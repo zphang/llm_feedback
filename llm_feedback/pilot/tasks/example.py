@@ -29,9 +29,9 @@ class ExampleTask(BaseTask):
                   chain_name: Optional[str] = None):
         # 0. Setup
         assert chain_name is None
-        initial_llm = ChatOpenAI(model_name=generation_llm)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm)
+        initial_llm = self.get_llm(model_name=generation_llm)
+        feedback_llm = self.get_llm(model_name=feedback_llm)
+        refinement_llm = self.get_llm(model_name=refinement_llm)
 
         # === 1. Initial solution === #
         initial_solution_prompt = ChatPromptTemplate.from_messages([

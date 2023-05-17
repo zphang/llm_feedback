@@ -1,3 +1,5 @@
+import os
+from langchain.chat_models import ChatOpenAI
 import dataclasses
 from typing import List, Dict, Optional
 
@@ -53,3 +55,19 @@ class BaseTask:
         :return: dictionary of metrics (make sure it's JSON serializable)
         """
         raise NotImplementedError()
+    
+    def get_llm(self, model_name: str):
+        """Return LLM model
+
+        :param model_name: model name
+        :return: LLM model
+        """
+        print(model_name)
+        if "vicuna" in model_name:
+            import openai
+            openai.api_key = "EMPTY" # Not support yet
+            openai.api_base = "http://localhost:8000/v1"
+        else:
+            # reset to default
+            os.environ["OPENAI_API_BASE"] = ""
+        return ChatOpenAI(model_name=model_name)
