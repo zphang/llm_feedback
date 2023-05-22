@@ -23,15 +23,15 @@ MAX_NUM_QUERIES = 3
 class FEVERTask(BaseTask):
     """FEVER task"""
 
-    def __init__(self, task_args_str, contriever=None):
+    def __init__(self, task_args_str):
         fever_config = read_json(task_args_str)
-        if contriever is None:
+        if "passage_path" in fever_config:
             self.contriever = Contriever.setup(
                 passage_path=fever_config["passage_path"],
                 index_path=fever_config["index_path"],
             )
         else:
-            self.contriever = contriever
+            self.contriever = None
 
     def get_dataset(self, phase: str):
         return datasets.load_dataset("fever", "v1.0")[phase]

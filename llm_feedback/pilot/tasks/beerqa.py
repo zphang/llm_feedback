@@ -1,8 +1,9 @@
+import pandas as pd
 import os
 import tqdm.auto as tqdm
 from typing import List, Dict, Optional
 
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatAnthropic
 from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -26,10 +27,13 @@ class BeerQATask(BaseTask):
     def __init__(self, task_args_str):
         beerqa_config = read_json(task_args_str)
         self.dataset_base_path = beerqa_config["dataset_base_path"]
-        self.contriever = Contriever.setup(
-            passage_path=beerqa_config["passage_path"],
-            index_path=beerqa_config["index_path"],
-        )
+        if "passage_path" in beerqa_config:
+            self.contriever = Contriever.setup(
+                passage_path=beerqa_config["passage_path"],
+                index_path=beerqa_config["index_path"],
+            )
+        else:
+            self.contriever = None
 
     def get_dataset(self, phase: str):
         filename_list = {
@@ -242,7 +246,57 @@ Based on the search results, output the answer to the above question.
         return out_list
 
     def evaluate(self, phase: str, outputs: List[Dict]):
-        raise NotImplementedError()
+        dataset = self.get_dataset(phase=phase)
+        scores = {"initial_score": [], "refined_score": [], "initial_raw": [], "refined_raw": []}
+        for row, example in zip(tqdm.tqdm(outputs), dataset):
+            initial_judgment = self.score_single(example=example, answer=row["initial_answer"])
+            refined_judgment = self.score_single(example=example, answer=row["refinement_answer"])
+            scores["initial_score"].append(initial_judgment["judgment"])
+            scores["refined_score"].append(refined_judgment["judgment"])
+            scores["initial_raw"].append(initial_judgment["raw_judgment"])
+            scores["refined_raw"].append(refined_judgment["raw_judgment"])
+        return {
+            "initial_score": float(pd.Series(scores["initial_score"]).mean()),
+            "refined_score": float(pd.Series(scores["refined_score"]).mean()),
+            "initial_raw": scores["initial_raw"],
+            "refined_raw": scores["initial_raw"],
+        }
+
+    @classmethod
+    def score_single(cls, example, answer):
+        llm = ChatAnthropic(model="claude-instant-v1.1")
+        judge_prompt = ChatPromptTemplate.from_messages([
+            SystemMessage(content="You are a homework grading assistant."),
+            HumanMessagePromptTemplate.from_template("""
+The following is a question on a quiz, where the student is allowed to look up information.
+
+QUESTION: {question}
+
+The answer key states the following are acceptable answers:
+
+ACCEPTED ANSWERS: {true_answers}
+
+A student wrote the following answer:
+
+Student's Answer: {answer}
+
+
+Think step-by-step, whether the student answered the question correctly, based on the answer key.
+Then, output "CORRECT" is the answer is correct, and "WRONG" otherwise.
+It is okay if the student provides more information than necessary. However, if the student is unable to answer, that counts as being wrong.
+Your output should look like:
+<reasoning> ... </reasoning>
+<score> CORRECT / WRONG </score>
+        """.strip(), input_variables=["question", "true_answers", "answer"])
+            ])
+        chain = LLMChain(llm=llm, prompt=judge_prompt,
+                         output_key="judgment")
+        raw_judgment = chain({
+            "question": example["question"],
+            "true_answers": ",".join(example["answers"]),
+            "answer": answer.strip(),
+        })["judgment"]
+        return {"raw_judgment": raw_judgment, "judgment": True if "CORRECT" in raw_judgment else False}
 
 
 def parse_search_terms(string):
