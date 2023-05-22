@@ -2,7 +2,6 @@ from typing import List, Dict, Optional
 import pandas as pd
 
 from datasets import load_dataset
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -13,6 +12,7 @@ from langchain.schema import (
 )
 
 from .base import BaseTask
+from ...utils.models import get_chat_model
 
 
 class MathQATask(BaseTask):
@@ -26,9 +26,9 @@ class MathQATask(BaseTask):
                   chain_name: Optional[str] = None):
         # 0. Setup
         assert chain_name is None
-        initial_llm = ChatOpenAI(model_name=generation_llm)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm)
+        initial_llm = get_chat_model(model_name=generation_llm)
+        feedback_llm = get_chat_model(model_name=feedback_llm)
+        refinement_llm = get_chat_model(model_name=refinement_llm)
 
         # === 1. Initial solution === #
         initial_solution_prompt = ChatPromptTemplate.from_messages([

@@ -100,6 +100,34 @@ class Contriever:
             passage_list_dict[query] = passage_list
         return passage_list_dict
 
+    def get_multi_passages_batched(self, query_list_batched, top_k: int = 5):
+        if not query_list_batched:
+            return {}
+        flattened_query_list = [query for query_list in query_list_batched for query in query_list]
+        flattened_questions_embedding = embed_queries(
+            ContrieverArgs(),
+            flattened_query_list, self.model, self.tokenizer
+        )
+        flattened_top_ids_and_scores = self.index.search_knn(flattened_questions_embedding, top_k)
+        top_ids_and_scores_batched = []
+        count = 0
+        for query_list in query_list_batched:
+            top_ids_and_scores_batched.append(
+                flattened_top_ids_and_scores[count:count+len(query_list)]
+            )
+            count += len(query_list)
+
+        passage_list_batched = []
+        for query_list, top_ids_and_scores in zip(query_list_batched, top_ids_and_scores_batched):
+            passage_list_dict = {}
+            for query, (passage_ids, _) in zip(query_list, top_ids_and_scores):
+                passage_list = []
+                for passage_id in passage_ids:
+                    passage_list.append(self.passage_id_map[passage_id])
+                passage_list_dict[query] = passage_list
+            passage_list_batched.append(passage_list_dict)
+        return passage_list_batched
+
     @classmethod
     def setup(cls, passage_path: str, index_path: str):
         model, tokenizer, _ = src.contriever.load_retriever("facebook/contriever")

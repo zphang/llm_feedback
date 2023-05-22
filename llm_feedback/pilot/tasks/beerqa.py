@@ -1,4 +1,5 @@
 import os
+import tqdm.auto as tqdm
 from typing import List, Dict, Optional
 
 from langchain.chat_models import ChatOpenAI
@@ -13,6 +14,7 @@ from langchain.schema import (
 
 from ...utils.io import read_json
 from ...utils.contriever import Contriever
+from ...utils.models import get_chat_model
 from .base import BaseTask
 
 MAX_NUM_QUERIES = 3
@@ -39,9 +41,9 @@ class BeerQATask(BaseTask):
                   chain_name: Optional[str] = None):
         # 0. Setup
         assert chain_name is None
-        initial_llm = ChatOpenAI(model_name=generation_llm)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm)
+        initial_llm = get_chat_model(model_name=generation_llm)
+        feedback_llm = get_chat_model(model_name=feedback_llm)
+        refinement_llm = get_chat_model(model_name=refinement_llm)
 
         # === 1a. Initial search === #
         initial_search_terms_prompt = ChatPromptTemplate.from_messages([
@@ -158,49 +160,86 @@ Based on the search results, output the answer to the above question.
         }
 
     def process(self, chain, example):
-        out1 = chain["initial_search_chain"]({"question": example["question"]})
+        return self.batch_process(chain, [example])[0]
 
-        search_terms = parse_search_terms(out1["initial_search_terms"])[:MAX_NUM_QUERIES]
-        search_result = self.contriever.get_multi_passages(search_terms, top_k=2)
-        formatted_search_result = format_search_results(search_result)
+    def batch_process(self, chain, example_list):
+        num_examples = len(example_list)
 
-        out2 = chain["initial_answer_chain"]({
-            "question": example["question"],
-            "formatted_search_result": formatted_search_result,
-        })
-        out3 = chain["feedback_chain"]({
-            "question": example["question"],
-            "formatted_search_result": formatted_search_result,
-            "initial_answer": out2["initial_answer"],
-        })
-        formatted_search_terms = "\n".join(f"- {search_term}" for search_term in search_terms)
-        out4 = chain["refinement_search_chain"]({
-            "question": example["question"],
-            "formatted_search_terms": formatted_search_terms,
-            "initial_answer": out2["initial_answer"],
-            "feedback": out3["feedback"],
-        })
+        # Get initial search terms
+        search_terms_list = []
+        out1_list = []
+        for example in tqdm.tqdm(example_list, desc="Initial"):
+            out1 = chain["initial_search_chain"]({"question": example["question"]})
+            out1_list.append(out1)
+            search_terms = parse_search_terms(out1["initial_search_terms"])[:MAX_NUM_QUERIES]
+            search_terms_list.append(search_terms)
 
-        refinement_search_terms = parse_search_terms(out4["refinement_search_terms"])[:MAX_NUM_QUERIES]
-        refinement_search_result = self.contriever.get_multi_passages(refinement_search_terms, top_k=2)
-        formatted_refinement_search_result = format_search_results(refinement_search_result)
-        out5 = chain["refinement_answer_chain"]({
-            "question": example["question"],
-            "formatted_search_terms": formatted_search_terms,
-            "initial_answer": out2["initial_answer"],
-            "feedback": out3["feedback"],
-            "formatted_refinement_search_result": formatted_refinement_search_result,
-        })
-        return {
-            "question": example["question"],
-            "initial_search_terms": out1["initial_search_terms"],
-            "search_results": search_result,
-            "initial_answer": out2["initial_answer"],
-            "feedback": out3["feedback"],
-            "refinement_search_terms": out4["refinement_search_terms"],
-            "refinement_search_result": refinement_search_result,
-            "refinement_answer": out5["refinement_answer"],
-        }
+        search_result_list = self.contriever.get_multi_passages_batched(search_terms_list, top_k=2)
+
+        refinement_search_terms_list = []
+        out2_list, out3_list, out4_list = [], [], []
+        formatted_search_terms_list = []
+        for i in tqdm.trange(num_examples, desc="Process Initial and Refine"):
+            example = example_list[i]
+            search_terms = search_terms_list[i]
+            search_result = search_result_list[i]
+
+            formatted_search_result = format_search_results(search_result)
+
+            out2 = chain["initial_answer_chain"]({
+                "question": example["question"],
+                "formatted_search_result": formatted_search_result,
+            })
+            out2_list.append(out2)
+            out3 = chain["feedback_chain"]({
+                "question": example["question"],
+                "formatted_search_result": formatted_search_result,
+                "initial_answer": out2["initial_answer"],
+            })
+            out3_list.append(out3)
+            formatted_search_terms = "\n".join(f"- {search_term}" for search_term in search_terms)
+            formatted_search_terms_list.append(formatted_search_terms)
+            out4 = chain["refinement_search_chain"]({
+                "question": example["question"],
+                "formatted_search_terms": formatted_search_terms,
+                "initial_answer": out2["initial_answer"],
+                "feedback": out3["feedback"],
+            })
+            out4_list.append(out4)
+            refinement_search_terms = parse_search_terms(out4["refinement_search_terms"])[:MAX_NUM_QUERIES]
+            refinement_search_terms_list.append(refinement_search_terms)
+
+        refinement_search_result_list = self.contriever.get_multi_passages_batched(
+            refinement_search_terms_list, top_k=2)
+
+        out_list = []
+        for i in tqdm.trange(num_examples, desc="Process Refinement"):
+            example = example_list[i]
+            refinement_search_result = refinement_search_result_list[i]
+            search_result = search_result_list[i]
+            out1, out2, out3, out4 = out1_list[i], out2_list[i], out3_list[i], out4_list[i]
+            formatted_search_terms = formatted_search_terms_list[i]
+
+            formatted_refinement_search_result = format_search_results(refinement_search_result)
+            out5 = chain["refinement_answer_chain"]({
+                "question": example["question"],
+                "formatted_search_terms": formatted_search_terms,
+                "initial_answer": out2["initial_answer"],
+                "feedback": out3["feedback"],
+                "formatted_refinement_search_result": formatted_refinement_search_result,
+            })
+            out = {
+                "question": example["question"],
+                "initial_search_terms": out1["initial_search_terms"],
+                "search_results": search_result,
+                "initial_answer": out2["initial_answer"],
+                "feedback": out3["feedback"],
+                "refinement_search_terms": out4["refinement_search_terms"],
+                "refinement_search_result": refinement_search_result,
+                "refinement_answer": out5["refinement_answer"],
+            }
+            out_list.append(out)
+        return out_list
 
     def evaluate(self, phase: str, outputs: List[Dict]):
         raise NotImplementedError()

@@ -18,6 +18,8 @@ def main():
     parser.add_argument("--phase", type=str, default="train")
     parser.add_argument("--max_num_examples", type=int, default=50)  # takes first n examples
     parser.add_argument("--output_dir")
+    parser.add_argument("--run_batched", action="store_true",
+                        help="Mainly needed for external tooling e.g. retrieval")
     args = parser.parse_args()
     if args.feedback_llm is None:
         args.feedback_llm = args.generation_llm
@@ -31,9 +33,10 @@ def main():
         generation_llm=args.generation_llm,
         feedback_llm=args.feedback_llm,
         refinement_llm=args.refinement_llm,
-        chain_name = args.chain_name
+        chain_name=args.chain_name
     )
     dataset = task.get_dataset(phase=args.phase)
+    max_num_examples = min(args.max_num_examples, len(dataset))
     os.makedirs(args.output_dir, exist_ok=True)
 
     filename = "{}__{}__{}__{}__{}__outputs.jsonl".format(
@@ -45,14 +48,17 @@ def main():
     )
     write_path = os.path.join(args.output_dir, filename)
     with open(write_path, "w") as f:
-        count = 0
-        max_num_examples = min(args.max_num_examples, len(dataset))
-        for i, example in zip(tqdm.trange(max_num_examples), dataset):
-            all_outputs = task.process(chain=chain, example=example)
-            f.write(json.dumps(all_outputs) + "\n")
-            count += 1
+        if args.run_batched:
+            sub_dataset = [dataset[i] for i in range(max_num_examples)]
+            all_outputs = task.batch_process(chain=chain, example_list=sub_dataset)
+            for row in all_outputs:
+                f.write(json.dumps(row) + "\n")
+        else:
+            for i, example in zip(tqdm.trange(max_num_examples), dataset):
+                all_outputs = task.process(chain=chain, example=example)
+                f.write(json.dumps(all_outputs) + "\n")
 
-    print(f"Wrote {count} {args.task} outputs to {write_path}.")
+    print(f"Wrote {max_num_examples} {args.task} outputs to {write_path}.")
 
 
 if __name__ == "__main__":

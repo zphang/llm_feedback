@@ -35,11 +35,20 @@ class BaseTask:
     def process(self, chain, example):
         """Process an example. Override in cases where we need to preprocess the example (e.g. rename keys)
 
-        :param langchain: langchain from get_chain
+        :param chain: langchain from get_chain
         :param example: example from get_dataset
         :return: dictionary of outputs (and all intermediate inputs)
         """
         return chain(example)
+
+    def batch_process(self, chain, example_list):
+        """Process a batch of examples.
+
+        :param chain: langchain from get_chain
+        :param example_list: example from get_dataset
+        :return: dictionary of outputs (and all intermediate inputs)
+        """
+        return [self.process(chain=chain, example=example) for example in example_list]
 
     def evaluate(self, phase: str, outputs: List[Dict]):
         """Takes a list of outputs (from get_chain) and evaluates them

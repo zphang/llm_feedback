@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 
 from datasets import load_dataset
 import evaluate
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -14,6 +13,7 @@ from langchain.schema import SystemMessage
 
 
 from .base import BaseTask
+from ...utils.models import get_chat_model
 
 
 class SLF5KTask(BaseTask):
@@ -37,9 +37,9 @@ class SLF5KTask(BaseTask):
     ):
         # 0. Setup
         assert chain_name in ["whole_model", "human_feedback", "model_feedback"]
-        initial_llm = ChatOpenAI(model_name=generation_llm, max_tokens=60)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm, max_tokens=60)
+        initial_llm = get_chat_model(model_name=generation_llm, max_tokens=60)
+        feedback_llm = get_chat_model(model_name=feedback_llm)
+        refinement_llm = get_chat_model(model_name=refinement_llm, max_tokens=60)
 
         if chain_name == "whole_model":
             # === 1. Initial solution === #

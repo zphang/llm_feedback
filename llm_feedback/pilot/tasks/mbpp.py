@@ -1,7 +1,6 @@
 from typing import List, Dict, Optional
 import datasets
 
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -13,6 +12,7 @@ from langchain.schema import (
 )
 
 from .base import BaseTask
+from ...utils.models import get_chat_model
 
 
 class MBPPTask(BaseTask):
@@ -24,9 +24,9 @@ class MBPPTask(BaseTask):
     def get_chain(self, generation_llm: str, feedback_llm: str, refinement_llm: str,
                   chain_name: Optional[str] = "regular"):
         # 0. Setup
-        initial_llm = ChatOpenAI(model_name=generation_llm)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm)
+        initial_llm = get_chat_model(model_name=generation_llm)
+        feedback_llm = get_chat_model(model_name=feedback_llm)
+        refinement_llm = get_chat_model(model_name=refinement_llm)
 
         initial_solution_prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content="You are a helpful Python coding assistant."),
