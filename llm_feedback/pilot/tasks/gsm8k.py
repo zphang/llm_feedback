@@ -28,9 +28,9 @@ class GSM8KTask(BaseTask):
                   chain_name: Optional[str] = None):
         # 0. Setup
         assert chain_name is None
-        initial_llm = ChatOpenAI(model_name=generation_llm)
-        feedback_llm = ChatOpenAI(model_name=feedback_llm)
-        refinement_llm = ChatOpenAI(model_name=refinement_llm)
+        initial_llm = self.get_llm(model_name=generation_llm)
+        feedback_llm = self.get_llm(model_name=feedback_llm)
+        refinement_llm = self.get_llm(model_name=refinement_llm)
 
         # === 1. Initial solution === #
         initial_solution_prompt = ChatPromptTemplate.from_messages([
@@ -42,8 +42,7 @@ class GSM8KTask(BaseTask):
         {text}
             """.strip(), input_variables=["text"])
         ])
-        initial_solution_chain = LLMChain(llm=initial_llm, prompt=initial_solution_prompt,
-                                          output_key="initial_solution")
+        initial_solution_chain = LLMChain(llm=initial_llm, prompt=initial_solution_prompt, output_key="initial_solution")
 
         # === 2. Feedback === #
         ilf_feedback_prompt = ChatPromptTemplate.from_messages([

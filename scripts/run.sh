@@ -1,7 +1,7 @@
-generation_llm=vicuna-13b
-feedback_llm=vicuna-13b
-refinement_llm=vicuna-13b
-task=mathqa
+generation_llm=llama-65b
+feedback_llm=llama-65b
+refinement_llm=llama-65b
+task=gsm8k
 python llm_feedback/pilot/run_pilot_generation.py \
     --generation_llm ${generation_llm} \
     --feedback_llm ${feedback_llm} \

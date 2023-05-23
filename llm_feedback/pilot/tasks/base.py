@@ -63,7 +63,7 @@ class BaseTask:
         :return: LLM model
         """
         print(model_name)
-        if "vicuna" in model_name:
+        if "vicuna" in model_name or "llama" in model_name:
             import openai
             openai.api_key = "EMPTY" # Not support yet
             openai.api_base = "http://localhost:8000/v1"
