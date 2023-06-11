@@ -1,5 +1,6 @@
 outputs
 notebooks
+third_party
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
