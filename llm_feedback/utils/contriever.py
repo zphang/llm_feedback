@@ -3,16 +3,9 @@ import numpy as np
 import pickle
 import dataclasses
 
-# Contriever codebase
-import src.index
-import src.contriever
-import src.utils
-import src.slurm
-import src.data
-import src.normalize_text
-
 
 def embed_queries(args, queries, model, tokenizer):
+    import src.normalize_text
     model.eval()
     embeddings, batch_question = [], []
     with torch.no_grad():
@@ -130,6 +123,10 @@ class Contriever:
 
     @classmethod
     def setup(cls, passage_path: str, index_path: str):
+        import src.index
+        import src.contriever
+        import src.data
+
         model, tokenizer, _ = src.contriever.load_retriever("facebook/contriever")
         model.eval()
         model = model.cuda()
