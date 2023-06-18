@@ -14,7 +14,6 @@ from langchain.schema import (
 )
 
 from ...utils.io import read_json
-from ...utils.contriever import Contriever
 from ...utils.models import get_chat_model
 from .base import BaseTask
 
@@ -25,6 +24,7 @@ class BeerQATask(BaseTask):
     """BeerQA task"""
 
     def __init__(self, task_args_str):
+        from ...utils.contriever import Contriever
         beerqa_config = read_json(task_args_str)
         self.dataset_base_path = beerqa_config["dataset_base_path"]
         if "passage_path" in beerqa_config:

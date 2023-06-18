@@ -13,7 +13,6 @@ from langchain.schema import (
 )
 
 from ...utils.io import read_json
-from ...utils.contriever import Contriever
 from ...utils.models import get_chat_model
 from .base import BaseTask
 
@@ -24,6 +23,7 @@ class FEVERTask(BaseTask):
     """FEVER task"""
 
     def __init__(self, task_args_str):
+        from ...utils.contriever import Contriever
         fever_config = read_json(task_args_str)
         if "passage_path" in fever_config:
             self.contriever = Contriever.setup(
