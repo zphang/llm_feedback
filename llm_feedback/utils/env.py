@@ -7,4 +7,4 @@ def get_env_path():
 
 
 def load_dotenv():
-    dotenv.load_dotenv(get_env_path())
+    dotenv.load_dotenv(get_env_path(), override=True)
