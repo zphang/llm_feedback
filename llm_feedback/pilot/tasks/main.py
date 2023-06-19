@@ -1,5 +1,6 @@
 from typing import Optional
 from . import base
+from . import alfworld
 from . import beerqa
 from . import fever
 from . import hotpotqa
@@ -13,6 +14,8 @@ def get_task(task_name: str, task_args_str: Optional[str] = None) -> base.BaseTa
     """Get task by name"""
     if task_name == "example":
         return example.ExampleTask()
+    elif task_name == "alfworld":
+        return alfworld.AlfworldTask()
     elif task_name == "beerqa":
         return beerqa.BeerQATask(task_args_str=task_args_str)
     elif task_name == "fever":

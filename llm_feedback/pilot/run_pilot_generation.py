@@ -48,7 +48,13 @@ def main():
     )
     write_path = os.path.join(args.output_dir, filename)
     with open(write_path, "w") as f:
-        if args.run_batched:
+        if args.task == "alfworld":
+            # alfworld has a weird setup where the examples are actually environments
+            # noinspection PyUnresolvedReferences
+            all_outputs = task.process_all(chain=chain, dataset=dataset, max_num_examples=max_num_examples)
+            for elem in all_outputs:
+                f.write(json.dumps(elem) + "\n")
+        elif args.run_batched:
             sub_dataset = [dataset[i] for i in range(max_num_examples)]
             all_outputs = task.batch_process(chain=chain, example_list=sub_dataset)
             for row in all_outputs:
