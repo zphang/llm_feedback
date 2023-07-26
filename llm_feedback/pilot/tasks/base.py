@@ -1,5 +1,6 @@
 import os
 from langchain.chat_models import ChatOpenAI
+import openai
 import dataclasses
 from typing import List, Dict, Optional
 
@@ -63,11 +64,5 @@ class BaseTask:
         :return: LLM model
         """
         print(model_name)
-        if "vicuna" in model_name or "llama" in model_name:
-            import openai
-            openai.api_key = "EMPTY" # Not support yet
-            openai.api_base = "http://localhost:8000/v1"
-        else:
-            # reset to default
-            os.environ["OPENAI_API_BASE"] = ""
+        openai.api_base = "http://localhost:5000/v1"
         return ChatOpenAI(model_name=model_name)

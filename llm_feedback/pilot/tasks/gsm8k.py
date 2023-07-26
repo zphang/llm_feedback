@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional
 import pandas as pd
-
+import os
+import openai
 from datasets import load_dataset
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain, SequentialChain
@@ -69,6 +70,7 @@ class GSM8KTask(BaseTask):
         ])
         feedback_chain = LLMChain(llm=feedback_llm, prompt=ilf_feedback_prompt, output_key="feedback")
 
+        
         # === 3. Refinement === #
         ilf_refinement_prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content="You are a math question-answering assistant."),
@@ -98,11 +100,12 @@ class GSM8KTask(BaseTask):
     def evaluate(self, phase: str, outputs: List[Dict]):
         metric_dict = {}
         dataset = self.get_dataset(phase=phase)
-        scores = {"initial_score": [], "refined_score": []}
+        scores = {"initial_score": [], "refined_score": [], "initial_results" : [],  "refined_results": [], "answers": []}
         for row, example in zip(outputs, dataset):
             initial_solution = get_gsm8k_answer(row["initial_solution"])
             refined_solution = get_gsm8k_answer(row["refinement"])
             parsed_answer = get_gsm8k_dataset_answer(example["answer"])
+
             initial_solution = int(initial_solution) if initial_solution.isdigit() else initial_solution
             refined_solution = int(refined_solution) if refined_solution.isdigit() else refined_solution
             parsed_answer = int(parsed_answer) if parsed_answer.isdigit() else parsed_answer
@@ -113,6 +116,18 @@ class GSM8KTask(BaseTask):
                 print("="*20)
             scores["initial_score"].append(parsed_answer == initial_solution)
             scores["refined_score"].append(parsed_answer == refined_solution)
+            scores["initial_results"].append(initial_solution)
+            scores["refined_results"].append(refined_solution)
+            scores["answers"].append(parsed_answer)
+        metric_dict["initial_results"] = scores["initial_results"]
+        metric_dict["refined_results"] = scores["refined_results"]
+        metric_dict["answers"] = scores["answers"]
+        print("initial_results", scores["initial_results"])
+        print("refined_results", scores["refined_results"])
+        # output different index
+        diff = [i for i in range(len(scores["initial_results"])) if scores["initial_results"][i] != scores["refined_results"][i]]
+        print("diff", diff)
+        print("answers", scores["answers"])
         metric_dict["initial_score"] = float(pd.Series(scores["initial_score"]).mean())
         metric_dict["refined_score"] = float(pd.Series(scores["refined_score"]).mean())
         return metric_dict

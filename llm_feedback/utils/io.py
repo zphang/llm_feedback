@@ -1,3 +1,4 @@
+import re
 import json
 
 
@@ -16,7 +17,11 @@ def read_json(path):
 
 
 def write_json(data, path):
-    return write_file(json.dumps(data, indent=2), path)
+    json_str = json.dumps(data, indent=2)
+    json_str = re.sub(r'": \[\s+', '": [', json_str)
+    json_str = re.sub(r'",\s+', '", ', json_str)
+    json_str = re.sub(r'"\s+\]', '"]', json_str)
+    return write_file(json_str, path)
 
 
 def read_jsonl(path):
@@ -38,4 +43,8 @@ def write_jsonl(data, path):
 
 
 def to_jsonl(data):
-    return json.dumps(data).replace("\n", "")
+    json_str = json.dumps(data).replace("\n", "")
+    json_str = re.sub(r'": \[\s+', '": [', json_str)
+    json_str = re.sub(r'",\s+', '", ', json_str)
+    json_str = re.sub(r'"\s+\]', '"]', json_str)
+    return json_str
