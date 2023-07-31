@@ -1,5 +1,6 @@
 import os
 from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatAnthropic
 import openai
 import dataclasses
 from typing import List, Dict, Optional
@@ -64,5 +65,8 @@ class BaseTask:
         :return: LLM model
         """
         print(model_name)
-        openai.api_base = "http://localhost:5000/v1"
-        return ChatOpenAI(model_name=model_name)
+        if ("gpt" in model_name) or ("llama" in model_name):
+            openai.api_key = os.environ["OPENAI_API_KEY"]
+            return ChatOpenAI(model_name=model_name)
+        else:
+            return ChatAnthropic(model_name=model_name)

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-generation_llm=gpt-4-0314
-feedback_llm=Llama-2-70b-chat-hf
-refinement_llm=gpt-4-0314
-task=mathqa
+generation_llm=gpt-3.5-turbo-0301
+feedback_llm=claude-2
+refinement_llm=gpt-3.5-turbo-0301
+task=beerqa
 python llm_feedback/pilot/run_pilot_generation.py \
     --generation_llm ${generation_llm} \
     --feedback_llm ${feedback_llm} \
