@@ -2,7 +2,7 @@
 generation_llm=gpt-3.5-turbo-0301
 feedback_llm=claude-2
 refinement_llm=gpt-3.5-turbo-0301
-task=beerqa
+task=hotpotqa
 python llm_feedback/pilot/run_pilot_generation.py \
     --generation_llm ${generation_llm} \
     --feedback_llm ${feedback_llm} \
